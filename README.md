@@ -13,8 +13,11 @@ between the underglow and the real strip. ZMK keeps doing everything it does tod
 - an **identify** mode shows each LED in its own color, so you can find out which index is which.
 
 When the underglow is off (RGB off, or idle) and an indicator wants to show, the module turns the
-LED power on just for it and off again afterwards. While the keyboard is idle, indicators are
-hidden. Animation frames only run while something is fading or moving.
+LED power on just for it and off again afterwards. While the keyboard is idle, persistent
+indicators (like a layer color) are hidden so they don't keep the LEDs powered; temporary ones
+(slots marked show-when-idle, and animations) still show, so an event without a keypress, such as
+an app switching the Bluetooth profile, is still visible. Animation frames only run while
+something is fading or moving.
 
 Indicator modules that use it:
 [zmk-rgb-layer-indicator](https://github.com/casab/zmk-rgb-layer-indicator),
@@ -92,6 +95,13 @@ zmk_led_overlay_clear(slot);
 zmk_led_overlay_set(slot, led, zmk_led_overlay_hsb(270, 100, 50));
 zmk_led_overlay_set_delayed(slot, led, color, 40);  // starts fading in 40 ms after the commit
 zmk_led_overlay_commit();
+```
+
+While the keyboard is idle, a slot's static LEDs are hidden. A temporary indicator that clears
+itself can opt in to showing anyway:
+
+```c
+zmk_led_overlay_set_show_when_idle(slot, true);
 ```
 
 Animations: one-shot effects; a new one in the same slot replaces the old one.

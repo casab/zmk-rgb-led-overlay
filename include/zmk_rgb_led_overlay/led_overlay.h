@@ -39,6 +39,12 @@ int zmk_led_overlay_clear(uint8_t slot);
 // Apply the slots' set/clear changes.
 void zmk_led_overlay_commit(void);
 
+// While the keyboard is idle, a slot's static LEDs are hidden (so a persistent indicator doesn't
+// keep the LED power on). Temporary indicators that clear themselves, such as a short flash on an
+// event that can happen without a keypress, call this with true to show while idle too.
+// Animations always show.
+int zmk_led_overlay_set_show_when_idle(uint8_t slot, bool show);
+
 enum zmk_led_overlay_anim_type {
     // A soft band of light crosses the board left to right / right to left.
     ZMK_LED_OVERLAY_ANIM_SWEEP_RIGHT,

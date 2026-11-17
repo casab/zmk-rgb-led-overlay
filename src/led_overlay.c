@@ -11,7 +11,9 @@
  *   - `identify` shows each LED in its own color, to find out which index is which LED.
  *
  * When the underglow is off (RGB off or idle) but an indicator wants to show, this turns the LED
- * power on for it and off again afterwards. While the keyboard is idle, indicators are hidden.
+ * power on for it and off again afterwards. While the keyboard is idle, persistent indicators are
+ * hidden; temporary ones (slots marked show-when-idle, and animations) still show, so a Bluetooth
+ * profile switched by an app while nobody types is still visible.
  *
  * Threads: all pixel state and drawing live on ZMK's low-priority work queue, the same queue the
  * underglow draws from. The public API only edits the slot targets under a spinlock and queues
@@ -89,6 +91,9 @@ static struct slot_target targets[NUM_SLOTS];
 static struct zmk_led_overlay_anim pending_anim[NUM_SLOTS];
 static uint32_t pending_anim_mask;
 static uint32_t disabled_mask;
+// Slots whose static LEDs still show while the keyboard is idle (temporary indicators that
+// clear themselves, such as a Bluetooth profile flash). Other slots hide while idle.
+static atomic_t idle_visible_mask;
 
 /* ---- Work-queue state ---- */
 
@@ -221,6 +226,20 @@ int zmk_led_overlay_clear(uint8_t slot) {
     return 0;
 }
 
+int zmk_led_overlay_set_show_when_idle(uint8_t slot, bool show) {
+    if (slot >= NUM_SLOTS) {
+        return -EINVAL;
+    }
+
+    if (show) {
+        atomic_or(&idle_visible_mask, BIT(slot));
+    } else {
+        atomic_and(&idle_visible_mask, ~BIT(slot));
+    }
+
+    return 0;
+}
+
 void zmk_led_overlay_commit(void) {
     k_work_submit_to_queue(zmk_workqueue_lowprio_work_q(), &led_overlay_apply_work);
 }
@@ -326,6 +345,7 @@ static float anim_intensity(const struct running_anim *ra, int led, int64_t now)
 static bool render(void) {
     int64_t now = k_uptime_get();
     bool active = zmk_activity_get_state() == ZMK_ACTIVITY_ACTIVE;
+    uint32_t idle_visible = atomic_get(&idle_visible_mask);
     bool painted = false;
     bool moving = false;
 
@@ -344,15 +364,17 @@ static bool render(void) {
             if (p->state == PIXEL_IN || p->state == PIXEL_OUT) {
                 moving = true;
             }
-            if (active && a > 0) {
+            // While idle, only slots marked show-when-idle keep their static LEDs.
+            if ((active || (idle_visible & BIT(s))) && a > 0) {
                 out[i] = blend(out[i], p->color, a);
                 painted = true;
             }
 
+            // Animations are short and always show, idle or not.
             struct running_anim *ra = &anims[s];
             if (ra->active) {
                 float ai = anim_intensity(ra, i, now);
-                if (active && ai > 0) {
+                if (ai > 0) {
                     out[i] = blend(out[i], ra->anim.color, ai);
                     painted = true;
                 }
