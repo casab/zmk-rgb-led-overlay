@@ -1,0 +1,27 @@
+# Per-LED overlay for ZMK's RGB underglow (see README.md).
+
+config ZMK_RGB_LED_OVERLAY
+    bool
+    default y
+    depends on DT_HAS_ZMK_LED_STRIP_OVERLAY_ENABLED
+    depends on ZMK_RGB_UNDERGLOW
+
+if ZMK_RGB_LED_OVERLAY
+
+config ZMK_RGB_LED_OVERLAY_SLOTS
+    int "Number of overlay slots (indicator modules each use one; higher slots are drawn on top)"
+    default 6
+
+config ZMK_RGB_LED_OVERLAY_FADE_MS
+    int "How long indicator LEDs take to fade in or out (ms)"
+    default 150
+
+config ZMK_RGB_LED_OVERLAY_FRAME_MS
+    int "Time between animation frames (ms); frames only run while something moves"
+    default 16
+
+config ZMK_RGB_LED_OVERLAY_INIT_PRIORITY
+    int "Init priority (after the real LED strip)"
+    default 91
+
+endif

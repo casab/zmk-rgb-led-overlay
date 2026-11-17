@@ -1,0 +1,35 @@
+# Copyright (c) 2026 Engin Al
+# SPDX-License-Identifier: MIT
+
+description: |
+  Virtual LED strip between ZMK's RGB underglow and the real strip. Point the `zmk,underglow`
+  chosen node at it. It keeps disabled LEDs out of the underglow effect and blends indicator LEDs
+  and animations on top.
+
+compatible: "zmk,led-strip-overlay"
+
+properties:
+  led-strip:
+    type: phandle
+    required: true
+    description: The real LED strip, e.g. <&led_strip>.
+  chain-length:
+    type: int
+    required: true
+    description: Number of LEDs; must match the real strip (ZMK's underglow reads it from here).
+  disabled-leds:
+    type: array
+    description: |
+      LED indexes (0-based, in chain order) left out of the underglow effect. Indicators and
+      animations can still light them briefly.
+  led-x:
+    type: array
+    description: |
+      Horizontal position of each LED (one value per LED, in chain order, any unit such as mm),
+      used by animations so they move across the board at an even speed. Without it, LEDs are
+      treated as evenly spaced in chain order.
+  identify:
+    type: boolean
+    description: |
+      Show every LED in its own color instead of the underglow, to find out which index is which
+      LED: LED i gets hue i * 360 / chain-length (0 red, then orange, yellow, green, ..., magenta).
