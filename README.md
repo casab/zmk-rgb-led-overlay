@@ -111,7 +111,7 @@ struct zmk_led_overlay_anim anim = {
     .type = ZMK_LED_OVERLAY_ANIM_SWEEP_RIGHT,  // also SWEEP_LEFT, RING_OUT, RING_IN, PULSE
     .color = zmk_led_overlay_hsb(175, 100, 50),
     .duration_ms = 350,
-    .leds = 0,                                 // PULSE: bit per LED
+    .leds = 0,                                 // bit per LED it may light; 0 = all (PULSE needs some)
 };
 zmk_led_overlay_animate(slot, &anim);
 ```

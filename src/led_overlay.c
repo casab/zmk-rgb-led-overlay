@@ -309,6 +309,9 @@ static float anim_intensity(const struct running_anim *ra, int led, int64_t now)
     if (t >= 1) {
         return 0;
     }
+    if (ra->anim.leds != 0 && !(ra->anim.leds & BIT(led))) {
+        return 0;
+    }
 
     float x = led_x[led];
     float half_span = (x_max - x_min) / 2;
@@ -331,7 +334,7 @@ static float anim_intensity(const struct running_anim *ra, int led, int64_t now)
         return smoothstep(1 - fabsf(d - r) / band);
     }
     case ZMK_LED_OVERLAY_ANIM_PULSE:
-        if (!(ra->anim.leds & BIT(led))) {
+        if (ra->anim.leds == 0) {
             return 0;
         }
         // Up and down once: 0 -> 1 -> 0.

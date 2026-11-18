@@ -60,7 +60,9 @@ struct zmk_led_overlay_anim {
     enum zmk_led_overlay_anim_type type;
     struct led_rgb color;
     uint16_t duration_ms;
-    uint32_t leds; // PULSE only: bit per LED
+    // Bit per LED the animation may light. 0 means all LEDs (PULSE needs at least one bit).
+    // Leaving LEDs out doesn't move the animation: sweeps and rings still use every LED's position.
+    uint32_t leds;
 };
 
 // Play a one-shot animation in a slot.
